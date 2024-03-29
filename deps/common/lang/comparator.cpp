@@ -15,6 +15,8 @@ See the Mulan PSL v2 for more details. */
 #include "common/defs.h"
 #include <algorithm>
 #include <string.h>
+#include <string>
+#include <sstream>
 
 namespace common {
 
@@ -65,4 +67,17 @@ int compare_string(void *arg1, int arg1_max_length, void *arg2, int arg2_max_len
   return 0;
 }
 
-}  // namespace common
+int compare_date(void *arg1, void *arg2)
+{
+  int v1 = *(int *)arg1;
+  int v2 = *(int *)arg2;
+  if (v1 > v2) {
+    return 1;
+  } else if (v1 < v2) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
+
+} // namespace common

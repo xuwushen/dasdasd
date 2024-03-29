@@ -80,30 +80,31 @@ void SessionStage::handle_request2(SessionEvent *event)
  */
 RC SessionStage::handle_sql(SQLStageEvent *sql_event)
 {
-  RC rc = query_cache_stage_.handle_request(sql_event);
+  //首先是query cache阶段
+  RC rc = query_cache_stage_.handle_request(sql_event);//RC:全局定义的返回码
   if (OB_FAIL(rc)) {
     LOG_TRACE("failed to do query cache. rc=%s", strrc(rc));
     return rc;
   }
-
+  //parse阶段
   rc = parse_stage_.handle_request(sql_event);
   if (OB_FAIL(rc)) {
     LOG_TRACE("failed to do parse. rc=%s", strrc(rc));
     return rc;
   }
-
+  //resolve阶段
   rc = resolve_stage_.handle_request(sql_event);
   if (OB_FAIL(rc)) {
     LOG_TRACE("failed to do resolve. rc=%s", strrc(rc));
     return rc;
   }
-
+  //optimize阶段
   rc = optimize_stage_.handle_request(sql_event);
   if (rc != RC::UNIMPLENMENT && rc != RC::SUCCESS) {
     LOG_TRACE("failed to do optimize. rc=%s", strrc(rc));
     return rc;
   }
-
+  //execute阶段
   rc = execute_stage_.handle_request(sql_event);
   if (OB_FAIL(rc)) {
     LOG_TRACE("failed to do execute. rc=%s", strrc(rc));

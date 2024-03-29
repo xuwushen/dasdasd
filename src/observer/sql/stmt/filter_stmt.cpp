@@ -11,13 +11,13 @@ See the Mulan PSL v2 for more details. */
 //
 // Created by Wangyunlai on 2022/5/22.
 //
-
 #include "sql/stmt/filter_stmt.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
 #include "common/rc.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
+#include "sql/stmt/check.h"
 
 FilterStmt::~FilterStmt()
 {
@@ -91,7 +91,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
 
   filter_unit = new FilterUnit;
 
-  if (condition.left_is_attr) {
+  if (condition.left_is_attr) { // 属性
     Table           *table = nullptr;
     const FieldMeta *field = nullptr;
     rc                     = get_table_and_field(db, default_table, tables, condition.left_attr, table, field);
@@ -102,13 +102,13 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     FilterObj filter_obj;
     filter_obj.init_attr(Field(table, field));
     filter_unit->set_left(filter_obj);
-  } else {
+  } else { // 属性值
     FilterObj filter_obj;
     filter_obj.init_value(condition.left_value);
     filter_unit->set_left(filter_obj);
   }
 
-  if (condition.right_is_attr) {
+  if (condition.right_is_attr) { // 属性
     Table           *table = nullptr;
     const FieldMeta *field = nullptr;
     rc                     = get_table_and_field(db, default_table, tables, condition.right_attr, table, field);
@@ -119,14 +119,30 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     FilterObj filter_obj;
     filter_obj.init_attr(Field(table, field));
     filter_unit->set_right(filter_obj);
-  } else {
+  } else { // 属性值
     FilterObj filter_obj;
     filter_obj.init_value(condition.right_value);
     filter_unit->set_right(filter_obj);
   }
 
   filter_unit->set_comp(comp);
-
+  
+  if(condition.left_value.attr_type()==DATES)
+  {
+    if (!isValidDate(condition.left_value.get_date())) 
+    {
+      LOG_WARN("invalid date value");
+      return RC::INVALID_ARGUMENT;
+    }
+  }
+  if(condition.right_value.attr_type()==DATES)
+  {
+    if (!isValidDate(condition.right_value.get_date())) 
+    {
+      LOG_WARN("invalid date value");
+      return RC::INVALID_ARGUMENT;
+    }
+  }
   // 检查两个类型是否能够比较
   return rc;
 }
